@@ -1,10 +1,23 @@
 var React = require('react')
 var ReactPivot = require('react-pivot')
+var Emitter = require('wildemitter')
 var createReactClass = require('create-react-class')
 
 var rows = require('./data.json')
 var showRate = (val) => {
-  return isFinite(val) ? `${(val*100).toFixed(1)}%` : 0
+  return isFinite(val) ? `${(val * 100).toFixed(1)}%` : 0
+}
+
+var bus = new Emitter
+var ReactPivotSaved = JSON.parse(localStorage.ReactPivotSaved || '{}')
+
+bus.on('*', function(event, data) {
+  persist(event, data)
+})
+
+function persist (prop, val) {
+  ReactPivotSaved[prop] = val
+  localStorage.ReactPivotSaved = JSON.stringify(ReactPivotSaved)
 }
 
 module.exports = createReactClass({
@@ -12,38 +25,47 @@ module.exports = createReactClass({
     {value: 'date', title: 'Date'},
     {value: 'host', title: 'Host'}
   ],
-  reduce: (row, memo) => {
-    memo[row.type] = (memo[row.type] || 0) + 1
-    return memo
-  },
   calculations: [
     {
       title: 'Impressions',
       value: 'impression',
-      template: val => val
+      className: 'alignRight'
     },
     {
       title: 'Loads',
       value: 'load',
-      template: val => val
+      className: 'alignRight'
     },
     {
       title: 'Displays',
       value: 'display',
-      template: val => val
+      className: 'alignRight'
     },
     {
       title: 'Load Rate',
       value: memo => memo.load / memo.impression,
-      template: showRate
-    }
-    ,
+      template: showRate,
+      className: 'alignRight'
+    },
     {
       title: 'Display Rate',
       value: memo => memo.display / memo.impression,
-      template: showRate
-    }  ],
+      template: showRate,
+      className: 'alignRight'
+    }
+  ],
+  reduce: (row, memo) => {
+    memo[row.type] = (memo[row.type] || 0) + 1
+    return memo
+  },
   render () {
+    const { 
+      activeDimensions,
+      sortBy,
+      sortDir,
+      solo,
+      hiddenColumns
+     } = ReactPivotSaved
     return (
       <div>
         <div>Report</div>
@@ -51,6 +73,12 @@ module.exports = createReactClass({
           dimensions={this.dimensions}
           reduce={this.reduce}
           calculations={this.calculations}
+          activeDimensions={activeDimensions || ['Transaction Type']}
+          sortBy={sortBy}
+          sortDir={sortDir}
+          solo={solo}
+          hiddenColumns={hiddenColumns}
+          eventBus={bus}
         />
       </div>
     )
