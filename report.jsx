@@ -8,18 +8,6 @@ var showRate = (val) => {
   return isFinite(val) ? `${(val * 100).toFixed(1)}%` : 0
 }
 
-var bus = new Emitter()
-var ReactPivotSaved = JSON.parse(window.localStorage.ReactPivotSaved || '{}')
-
-bus.on('*', function (event, data) {
-  persist(event, data)
-})
-
-function persist (prop, val) {
-  ReactPivotSaved[prop] = val
-  window.localStorage.ReactPivotSaved = JSON.stringify(ReactPivotSaved)
-}
-
 module.exports = createReactClass({
   dimensions: [
     {value: 'date', title: 'Date'},
@@ -58,6 +46,16 @@ module.exports = createReactClass({
     memo[row.type] = (memo[row.type] || 0) + 1
     return memo
   },
+  bus: new Emitter(),
+  getInitialState () {
+    return JSON.parse(window.localStorage.PivotState || '{}')
+  },
+  componentWillMount () {
+    this.bus.on('*', (event, data) => {
+      this.setState({[event]: data})
+      window.localStorage.PivotState = JSON.stringify(this.state)
+    })
+  },
   render () {
     const {
       activeDimensions,
@@ -65,7 +63,7 @@ module.exports = createReactClass({
       sortDir,
       solo,
       hiddenColumns
-     } = ReactPivotSaved
+     } = this.state
     return (
       <div>
         <div>Report</div>
@@ -78,7 +76,7 @@ module.exports = createReactClass({
           sortDir={sortDir}
           solo={solo}
           hiddenColumns={hiddenColumns}
-          eventBus={bus}
+          eventBus={this.bus}
         />
       </div>
     )
