@@ -8,16 +8,16 @@ var showRate = (val) => {
   return isFinite(val) ? `${(val * 100).toFixed(1)}%` : 0
 }
 
-var bus = new Emitter
-var ReactPivotSaved = JSON.parse(localStorage.ReactPivotSaved || '{}')
+var bus = new Emitter()
+var ReactPivotSaved = JSON.parse(window.localStorage.ReactPivotSaved || '{}')
 
-bus.on('*', function(event, data) {
+bus.on('*', function (event, data) {
   persist(event, data)
 })
 
 function persist (prop, val) {
   ReactPivotSaved[prop] = val
-  localStorage.ReactPivotSaved = JSON.stringify(ReactPivotSaved)
+  window.localStorage.ReactPivotSaved = JSON.stringify(ReactPivotSaved)
 }
 
 module.exports = createReactClass({
@@ -59,7 +59,7 @@ module.exports = createReactClass({
     return memo
   },
   render () {
-    const { 
+    const {
       activeDimensions,
       sortBy,
       sortDir,
